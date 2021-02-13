@@ -10,38 +10,38 @@
  *  International Registered Trademark & Property of INVERTUS, UAB
  */
 
-use Invertus\Skeleton\Install\Installer;
-use Invertus\Skeleton\Install\Uninstaller;
+use Evolutive\Manticore\Install\Installer;
+use Evolutive\Manticore\Install\Uninstaller;
 use Symfony\Component\Config\ConfigCache;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Dumper\PhpDumper;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\Config\FileLocator;
-use \Invertus\Skeleton\Install\Tab;
+use \Evolutive\Manticore\Install\Tab;
 
-class Skeleton extends Module
+class Manticore extends Module
 {
     /**
-     * If false, then SkeletonContainer is in immutable state
+     * If false, then ManticoreContainer is in immutable state
      */
     const DISABLE_CACHE = true;
 
     /**
-     * @var SkeletonContainer
+     * @var ManticoreContainer
      */
     private $moduleContainer;
 
     public function __construct()
     {
         $this->tab = 'other_modules';
-        $this->name = 'skeleton';
+        $this->name = 'manticore';
         $this->version = '1.0.0';
-        $this->author = 'Invertus';
+        $this->author = 'Evolutive';
 
         parent::__construct();
         $this->autoLoad();
         $this->compile();
-        $this->displayName = $this->l('Skeleton');
+        $this->displayName = $this->l('Manticore');
         $this->description = $this->l('This is module description');
     }
 
@@ -85,7 +85,7 @@ class Skeleton extends Module
     /**
      * Gets container with loaded classes defined in src folder
      *
-     * @return SkeletonContainer
+     * @return ManticoreContainer
      */
     public function getContainer()
     {

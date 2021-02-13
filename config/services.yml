@@ -1,24 +1,24 @@
 services:
-    skeleton.module:
-        class: 'Skeleton'
+    manticore.module:
+        class: 'Manticore'
         factory: ['Module', 'getInstanceByName']
         arguments:
-            - 'skeleton'
+            - 'manticore'
 
 #    Installers
     install.tab:
-        class: 'Invertus\Skeleton\Install\Tab'
+        class: 'Evolutive\Manticore\Install\Tab'
         arguments:
             - '%module_settings%'
 
     installer:
-        class: 'Invertus\Skeleton\Install\Installer'
+        class: 'Evolutive\Manticore\Install\Installer'
         arguments:
-            - '@skeleton.module'
+            - '@manticore.module'
             - '%module_settings%'
 
     uninstaller:
-        class: 'Invertus\Skeleton\Install\Uninstaller'
+        class: 'Evolutive\Manticore\Install\Uninstaller'
         arguments:
-            - '@skeleton.module'
+            - '@manticore.module'
             - '%module_settings%'

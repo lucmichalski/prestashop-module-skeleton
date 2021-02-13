@@ -10,7 +10,7 @@
  *  International Registered Trademark & Property of INVERTUS, UAB
  */
 
-namespace Invertus\Skeleton\Install;
+namespace Evolutive\Manticore\Install;
 
 use Configuration;
 use Db;
@@ -23,7 +23,7 @@ use Tools;
 class Installer extends AbstractInstaller
 {
     /**
-     * @var \Skeleton
+     * @var \Manticore
      */
     private $module;
     /**
@@ -32,10 +32,10 @@ class Installer extends AbstractInstaller
     private $configuration;
 
     /**
-     * @param \Skeleton $module
+     * @param \Manticore $module
      * @param array $configuration
      */
-    public function __construct(\Skeleton $module, array $configuration)
+    public function __construct(\Manticore $module, array $configuration)
     {
         $this->module = $module;
         $this->configuration = $configuration;

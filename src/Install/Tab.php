@@ -10,7 +10,7 @@
  *  International Registered Trademark & Property of INVERTUS, UAB
  */
 
-namespace Invertus\Skeleton\Install;
+namespace Evolutive\Manticore\Install;
 
 /**
  * Class Tab - module admin tab settings
@@ -20,7 +20,7 @@ class Tab
     /**
      * @var string info controller name
      */
-    private $controllerInfo = 'AdminSkeletonInfo';
+    private $controllerInfo = 'AdminManticoreInfo';
 
     /**
      * @var array

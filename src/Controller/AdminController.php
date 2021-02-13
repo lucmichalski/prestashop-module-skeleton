@@ -10,7 +10,7 @@
  *  International Registered Trademark & Property of INVERTUS, UAB
  */
 
-namespace Invertus\Skeleton\Controller;
+namespace Evolutive\Manticore\Controller;
 
 /**
  * Class AdminController - an abstraction for all admin controllers

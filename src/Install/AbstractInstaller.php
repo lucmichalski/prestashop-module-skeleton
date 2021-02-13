@@ -10,7 +10,7 @@
  *  International Registered Trademark & Property of INVERTUS, UAB
  */
 
-namespace Invertus\Skeleton\Install;
+namespace Evolutive\Manticore\Install;
 
 use Db;
 use Exception;

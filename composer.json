@@ -1,15 +1,15 @@
 {
-  "name": "invertus/skeleton",
+  "name": "lumichaalski/ps-manticore",
   "type": "prestashop-module",
   "authors": [
     {
-      "name": "Invertus",
-      "email": "help@invertus.eu"
+      "name": "Luc Michalski",
+      "email": "lmichalski@evolutive-business.com"
     }
   ],
   "autoload": {
     "psr-4": {
-      "Invertus\\Skeleton\\": "src/"
+      "Evolutive\\Manticore\\": "src/"
     }
   },
   "require": {

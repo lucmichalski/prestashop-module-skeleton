@@ -11,9 +11,9 @@
  */
 
 /**
- * Class AdminSkeletonTabController - it is invisible tab used for other tab display inheritance
+ * Class AdminManticoreTabController - it is invisible tab used for other tab display inheritance
  */
-class AdminSkeletonTabController extends \Invertus\Skeleton\Controller\AdminController
+class AdminManticoreTabController extends \Evolutive\Manticore\Controller\AdminController
 {
 
 }
