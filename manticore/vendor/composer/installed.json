@@ -1,6 +1,122 @@
 {
     "packages": [
         {
+            "name": "manticoresoftware/manticoresearch-php",
+            "version": "1.6.0",
+            "version_normalized": "1.6.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/manticoresoftware/manticoresearch-php.git",
+                "reference": "bb9c3a073af58b3abf170eb0261896556b77bc5d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/manticoresoftware/manticoresearch-php/zipball/bb9c3a073af58b3abf170eb0261896556b77bc5d",
+                "reference": "bb9c3a073af58b3abf170eb0261896556b77bc5d",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "php": ">=7.1",
+                "psr/log": ">=1.1"
+            },
+            "require-dev": {
+                "mockery/mockery": "*",
+                "phpunit/phpunit": ">=7.5",
+                "squizlabs/php_codesniffer": ">=3.5"
+            },
+            "suggest": {
+                "ext-curl": "*",
+                "guzzlehttp/psr7": ">=1.6",
+                "monolog/monolog": "*",
+                "php-http/curl-client": ">=1.7",
+                "php-http/httplug": "^1.1",
+                "php-http/message": "^1.7"
+            },
+            "time": "2021-01-05T11:43:12+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "Manticoresearch\\": "src/Manticoresearch/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "Adrian Nuta",
+                    "email": "adriannuta@gmail.com"
+                }
+            ],
+            "description": "PHP Client for Manticore Search",
+            "keywords": [
+                "client",
+                "manticoresearch",
+                "search"
+            ],
+            "support": {
+                "issues": "https://github.com/manticoresoftware/manticoresearch-php/issues",
+                "source": "https://github.com/manticoresoftware/manticoresearch-php/tree/1.6.0"
+            },
+            "install-path": "../manticoresoftware/manticoresearch-php"
+        },
+        {
+            "name": "psr/log",
+            "version": "1.1.3",
+            "version_normalized": "1.1.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/log.git",
+                "reference": "0f73288fd15629204f9d42b7055f72dacbe811fc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/log/zipball/0f73288fd15629204f9d42b7055f72dacbe811fc",
+                "reference": "0f73288fd15629204f9d42b7055f72dacbe811fc",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "time": "2020-03-23T09:12:05+00:00",
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.1.x-dev"
+                }
+            },
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "Psr\\Log\\": "Psr/Log/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "http://www.php-fig.org/"
+                }
+            ],
+            "description": "Common interface for logging libraries",
+            "homepage": "https://github.com/php-fig/log",
+            "keywords": [
+                "log",
+                "psr",
+                "psr-3"
+            ],
+            "support": {
+                "source": "https://github.com/php-fig/log/tree/1.1.3"
+            },
+            "install-path": "../psr/log"
+        },
+        {
             "name": "squizlabs/php_codesniffer",
             "version": "3.2.3",
             "version_normalized": "3.2.3.0",

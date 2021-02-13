@@ -7,6 +7,14 @@ namespace Composer\Autoload;
 class ComposerStaticInit395c6f27bcf17ade37614fc921cb7d37
 {
     public static $prefixLengthsPsr4 = array (
+        'P' => 
+        array (
+            'Psr\\Log\\' => 8,
+        ),
+        'M' => 
+        array (
+            'Manticoresearch\\' => 16,
+        ),
         'E' => 
         array (
             'Evolutive\\Manticore\\' => 20,
@@ -14,6 +22,14 @@ class ComposerStaticInit395c6f27bcf17ade37614fc921cb7d37
     );
 
     public static $prefixDirsPsr4 = array (
+        'Psr\\Log\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/psr/log/Psr/Log',
+        ),
+        'Manticoresearch\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/manticoresoftware/manticoresearch-php/src/Manticoresearch',
+        ),
         'Evolutive\\Manticore\\' => 
         array (
             0 => __DIR__ . '/../..' . '/src',
