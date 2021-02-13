@@ -2,12 +2,11 @@
 /**
  * NOTICE OF LICENSE
  *
- * @author    INVERTUS, UAB www.invertus.eu <support@invertus.eu>
- * @copyright Copyright (c) permanent, INVERTUS, UAB
+ * @author    Evolutive Group, evolutive-group.com <lmichalski@evolutive-business.com>
+ * @copyright Copyright (c) permanent, Evolutive Group 2021
  * @license   MIT
  * @see       /LICENSE
  *
- *  International Registered Trademark & Property of INVERTUS, UAB
  */
 
 namespace Evolutive\Manticore\Install;

@@ -2,12 +2,11 @@
 /**
  * NOTICE OF LICENSE
  *
- * @author    INVERTUS, UAB www.invertus.eu <support@invertus.eu>
- * @copyright Copyright (c) permanent, INVERTUS, UAB
+ * @author    Evolutive Group, evolutive-group.com <lmichalski@evolutive-business.com>
+ * @copyright Copyright (c) permanent, Evolutive Group 2021
  * @license   MIT
  * @see       /LICENSE
  *
- *  International Registered Trademark & Property of INVERTUS, UAB
  */
 
 header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
