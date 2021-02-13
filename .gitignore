@@ -4,3 +4,5 @@ var/cache/container.php
 var/cache/container.php.meta
 var/logs/*
 /vendor
+*.zip
+.DS_Store
