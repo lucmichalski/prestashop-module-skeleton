@@ -1,50 +1,45 @@
 services:
-    manticore.module:
-        class: 'Manticore'
-        factory: ['Module', 'getInstanceByName']
-        arguments:
-            - 'manticore'
 
-    # Installers
-    install.tab:
-        class: 'Evolutive\Manticore\Install\Tab'
+    prestashop.module.manticore.uploader.supplier_extra_image_uploader:
+        class: PrestaShop\Module\Manticore\Uploader\SupplierExtraImageUploader
         arguments:
-            - '%module_settings%'
+          - '@prestashop.module.manticoreextendsymfonyform.repository.supplier_extra_image_repository'
 
-    installer:
-        class: 'Evolutive\Manticore\Install\Installer'
+    prestashop.module.manticoreextendsymfonyform.repository.supplier_extra_image_repository:
+        class: PrestaShop\Module\Manticore\Repository\SupplierExtraImageRepository
+        public: true
+        factory: ['@doctrine.orm.entity_manager', getRepository]
         arguments:
-            - '@manticore.module'
-            - '%module_settings%'
-
-    uninstaller:
-        class: 'Evolutive\Manticore\Install\Uninstaller'
-        arguments:
-            - '@manticore.module'
-            - '%module_settings%'
+          - PrestaShop\Module\ManitocoreExtendSymfonyForm\Entity\SupplierExtraImage
 
     # Decorators
     # ref. https://devdocs.prestashop.com/1.7/modules/concepts/controllers/admin-controllers/override-decorate-controller/#decorate-the-controller
-    manticore_products_controller:
-        class: 'Evolutive\Manticore\Controller\AdminProductController'
-        decorates: PrestaShopBundle\Controller\Admin\Improve\Sell\Catalog\Product\ProductController
+    prestashop.module.manticore.products.controller:
+        class: 'PrestaShop\Module\Manticore\Controller\AdminProductController'
+        decorates: 'PrestaShopBundle\Controller\Admin\ProductController'
         arguments: 
-            - '@manticore_products_controller.inner'
+            - '@prestashop.module.manticore.products.controller.inner'
 
-    manticore_orders_controller:
-        class: 'Evolutive\Manticore\Controller\AdminOrderController'
-        decorates: PrestaShopBundle\Controller\Admin\Improve\Sell\Order\OrderController
+    prestashop.module.manticore.customers.controller:
+        class: 'PrestaShop\Module\Manticore\Controller\AdminCustomerController'
+        decorates: 'PrestaShopBundle\Controller\Admin\Sell\Customer\CustomerController'
         arguments:
-            - '@manticore_orders_controller.inner'
+            - '@prestashop.module.manticore.customers.controller.inner'
 
-    manticore_customers_controller:
-        class: 'Evolutive\Manticore\Controller\AdminCustomerController'
-        decorates: PrestaShopBundle\Controller\Admin\Improve\Sell\Customer\CustomerController
+    prestashop.module.manticore.address.controller:
+        class: 'PrestaShop\Module\Manticore\Controller\AdminAddressController'
+        decorates: 'PrestaShopBundle\Controller\Admin\Sell\Address\AddressController'
         arguments:
-            - '@manticore_customers_controller.inner'
+            - '@prestashop.module.manticore.address.controller.inner'
 
-    manticore_address_controller:
-        class: 'Evolutive\Manticore\Controller\AdminAddressController'
-        decorates: PrestaShopBundle\Controller\Admin\Improve\Sell\Address\AddressController
+    prestashop.module.manticore.orders.controller:
+        class: 'PrestaShop\Module\Manticore\Controller\AdminOrderController'
+        decorates: 'PrestaShopBundle\Controller\Admin\Sell\Order\OrderController'
         arguments:
-            - '@manticore_address_controller.inner'
+            - '@prestashop.module.manticore.orders.controller.inner'
+
+    prestashop.module.manticore.cms.controller:
+        class: 'PrestaShop\Module\Manticore\Controller\AdminCmsController'
+        decorates: 'PrestaShopBundle\Controller\Admin\Improve\Design\CmsPageController'
+        arguments: 
+            - '@prestashop.module.manticore.cms.controller.inner'

@@ -26,30 +26,23 @@
 
 declare(strict_types=1);
 
-namespace PrestaShop\Module\Manticore\Controller;
+namespace PrestaShop\Module\Manticore\FrameworkBundleAdminController;
 
 use PrestaShopBundle\Controller\Admin\FrameworkBundleAdminController;
-use PrestaShopBundle\Controller\Admin\Sell\Address\AddressController;
-use PrestaShop\PrestaShop\Core\Search\Filters\AddressFilters;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Request;
 
-class AdminAddressController extends FrameworkBundleAdminController
+class ManticoreOrderController extends FrameworkBundleAdminController
 {
-
     /**
-     * @var AdminAddressController
+     * @param int $orderId
+     *
+     * @return Response
      */
-    private $decoratedController;
-
-    public function __construct(AddressController $decoratedController)
+    public function markOrderAction(int $orderId): Response
     {
-        $this->decoratedController = $decoratedController;
-    }
+        // Do what you need depending on use case
+        $this->addFlash('success', $this->trans('Order was successfully marked', 'Admin.Catalog.Orders'));
 
-    public function indexAction(Request $request, AddressFilters $filters): Response
-    {
-        return $this->decoratedController->indexAction($request, $filters);
+        return $this->redirectToRoute('admin_orders_index');
     }
-
 }

@@ -1,30 +1,21 @@
 {
-  "name": "lumichaalski/ps-manticore",
-  "type": "prestashop-module",
+  "name": "prestashop/manticore",
   "authors": [
     {
       "name": "Luc Michalski",
-      "email": "lmichalski@evolutive-business.com"
+      "email": "lmichalski@evolutive-bussiness.com"
+    },
+    {
+      "name": "PrestaShop Core team"
     }
   ],
   "autoload": {
     "psr-4": {
-      "Evolutive\\Manticore\\": "src/"
-    }
-  },
-  "require": {
-    "php": ">=5.4",
-    "manticoresoftware/manticoresearch-php": "^1.6"
-  },
-  "require-dev": {
-    "squizlabs/php_codesniffer": "^3.2"
-  },
-  "scripts": {
-    "post-install-cmd": [
-      "php -r \"copy('config/pre-commit', '../.git/hooks/pre-commit');\""
-    ],
-    "post-update-cmd": [
-      "php -r \"copy('config/pre-commit', '../.git/hooks/pre-commit');\""
-    ]
+      "PrestaShop\\Module\\Manticore\\": "src/"
+    },
+    "config": {
+      "prepend-autoloader": false
+    },
+    "type": "prestashop-module"
   }
 }

@@ -1,133 +1,116 @@
 <?php
+# /modules/manticore/manticore.php
+
 /**
- * NOTICE OF LICENSE
- *
- * @author    Evolutive Group, evolutive-group.com <lmichalski@evolutive-business.com>
- * @copyright Copyright (c) permanent, Evolutive Group 2021
- * @license   MIT
- * @see       /LICENSE
- *
+ * Manticore - A Prestashop Module
+ * 
+ * Manticore
+ * 
+ * @author Luc Michalski <lmichalski@evolutive-business.com>
+ * @version 0.0.1
  */
 
-use Evolutive\Manticore\Install\Installer;
-use Evolutive\Manticore\Install\Uninstaller;
-use Symfony\Component\Config\ConfigCache;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Dumper\PhpDumper;
-use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
-use Symfony\Component\Config\FileLocator;
-use \Evolutive\Manticore\Install\Tab;
+declare(strict_types=1);
+
+use PrestaShop\Module\Manitcore\Install\Installer;
+use PrestaShop\PrestaShop\Core\Grid\Action\Row\RowActionCollectionInterface;
+use PrestaShop\PrestaShop\Core\Grid\Action\Row\Type\SubmitRowAction;
+use PrestaShop\PrestaShop\Core\Grid\Column\ColumnInterface;
+use PrestaShop\PrestaShop\Core\Grid\Definition\GridDefinitionInterface;
+use PrestaShop\PrestaShop\Core\Grid\Exception\ColumnNotFoundException;
+
+if ( !defined('_PS_VERSION_') ) exit;
 
 class Manticore extends Module
 {
-    /**
-     * If false, then ManticoreContainer is in immutable state
-     */
-    const DISABLE_CACHE = true;
+	public function __construct()
+	{
+		$this->initializeModule();
+	}
 
     /**
-     * @var ManticoreContainer
+     * @return bool
      */
-    private $moduleContainer;
-
-    public function __construct()
-    {
-        $this->tab = 'other_modules';
-        $this->name = 'manticore';
-        $this->version = '1.0.0';
-        $this->author = 'Evolutive';
-
-        parent::__construct();
-        $this->autoLoad();
-        $this->compile();
-        $this->displayName = $this->l('Manticore');
-        $this->description = $this->l('This is module description');
-    }
-
-    public function getTabs()
-    {
-        /** @var Tab $tab */
-        $tab = $this->getContainer()->get('install.tab');
-        return $tab->getTabs();
-    }
-
-    public function getContent()
-    {
-        /** @var Tab $tab */
-        $tab = $this->getContainer()->get('install.tab');
-
-        $redirectLink = $this->context->link->getAdminLink($tab->getControllerInfo());
-        Tools::redirectAdmin($redirectLink);
-    }
-
     public function install()
     {
-        /** @var Installer $installer */
-        $installer = $this->getContainer()->get('installer');
-
-        return parent::install() && $installer->init();
-    }
-
-    public function uninstall()
-    {
-        /** @var Uninstaller $unInstaller */
-        $unInstaller = $this->getContainer()->get('uninstaller');
-
-        return parent::uninstall() && $unInstaller->init();
-    }
-
-    public function hookActionDispatcherBefore()
-    {
-        $this->autoLoad();
-    }
-
-    /**
-     * Gets container with loaded classes defined in src folder
-     *
-     * @return ManticoreContainer
-     */
-    public function getContainer()
-    {
-        return $this->moduleContainer;
-    }
-
-    /**
-     * Autoload's project files from /src directory
-     */
-    private function autoLoad()
-    {
-        $autoLoadPath = $this->getLocalPath().'vendor/autoload.php';
-
-        require_once $autoLoadPath;
-    }
-
-    /**
-     * Creates compiled dependency injection container which holds data configured in config/config.yml file.
-     *
-     * @throws Exception
-     */
-    private function compile()
-    {
-        $containerCache = $this->getLocalPath().'var/cache/container.php';
-        $containerConfigCache = new ConfigCache($containerCache, self::DISABLE_CACHE);
-
-        $containerClass = get_class($this).'Container';
-
-        if (!$containerConfigCache->isFresh()) {
-            $containerBuilder = new ContainerBuilder();
-            $locator = new FileLocator($this->getLocalPath().'/config');
-            $loader  = new YamlFileLoader($containerBuilder, $locator);
-            $loader->load('config.yml');
-            $containerBuilder->compile();
-            $dumper = new PhpDumper($containerBuilder);
-
-            $containerConfigCache->write(
-                $dumper->dump(['class' => $containerClass]),
-                $containerBuilder->getResources()
-            );
+        if (!parent::install()) {
+            return false;
         }
 
-        require_once $containerCache;
-        $this->moduleContainer = new $containerClass();
+        $installer = new Installer();
+
+        return $installer->install($this);
     }
+
+	public function uninstall()
+	{
+		return
+			parent::uninstall()
+		;
+	}
+	
+	/** Module configuration page */
+	public function getContent()
+	{
+		return 'Manticore configuration page !';
+	}
+
+	/** Initialize the module declaration */
+	private function initializeModule()
+	{
+		$this->name = 'manticore';
+		$this->tab = 'others';
+		$this->version = '0.0.1';
+		$this->author = 'Luc Michalski';
+		$this->need_instance = 1;
+		$this->ps_versions_compliancy = [
+			'min' => '1.6',
+			'max' => _PS_VERSION_,
+		];
+		$this->bootstrap = true;
+		
+		parent::__construct();
+
+		$this->displayName = $this->l('Manticore');
+		$this->description = $this->l('Manticore');
+		$this->confirmUninstall = $this->l('Are you sure you want to uninstall this module ?');
+	}
+
+    /**
+     * @param array $params
+     */
+    public function hookActionOrderGridDefinitionModifier(array $params): void
+    {
+        /** @var GridDefinitionInterface $orderGridDefinition */
+        $orderGridDefinition = $params['definition'];
+
+        /** @var RowActionCollectionInterface $actionsCollection */
+        $actionsCollection = $this->getActionsColumn($orderGridDefinition)->getOption('actions');
+        $actionsCollection->add(
+            // mark order is just an example of some custom action
+            (new SubmitRowAction('mark_order'))
+                ->setName($this->trans('Mark', [], 'Admin.Actions'))
+                ->setIcon('push_pin')
+                ->setOptions([
+                    'route' => 'demo_admin_orders_mark_order',
+                    'route_param_name' => 'orderId',
+                    'route_param_field' => 'id_order',
+                    // use this if you want to show the action inline instead of adding it to dropdown
+                    'use_inline_display' => true,
+                ])
+        );
+        //@todo: actually button is not working yet, because javascript part is missing (SubmitRowActionExtension)
+    }
+
+    private function getActionsColumn(GridDefinitionInterface $gridDefinition): ColumnInterface
+    {
+        try {
+            return $gridDefinition->getColumnById('actions');
+        } catch (ColumnNotFoundException $e) {
+            // It is possible that not every grid will have actions column.
+            // In this case you can create a new column or throw exception depending on your needs
+            throw $e;
+        }
+    }
+    
 }

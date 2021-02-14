@@ -1,0 +1,7 @@
+manticore_admin_orders_mark_order:
+  path: manticore/{orderId}/mark-order
+  methods: [POST]
+  defaults:
+    _controller: PrestaShop\Module\Manticore\Controller\ManticoreOrderController::markOrder
+  requirements:
+      orderId: \d+
