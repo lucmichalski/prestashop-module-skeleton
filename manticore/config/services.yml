@@ -1,17 +1,5 @@
 services:
 
-    prestashop.module.manticore.uploader.supplier_extra_image_uploader:
-        class: PrestaShop\Module\Manticore\Uploader\SupplierExtraImageUploader
-        arguments:
-          - '@prestashop.module.manticoreextendsymfonyform.repository.supplier_extra_image_repository'
-
-    prestashop.module.manticoreextendsymfonyform.repository.supplier_extra_image_repository:
-        class: PrestaShop\Module\Manticore\Repository\SupplierExtraImageRepository
-        public: true
-        factory: ['@doctrine.orm.entity_manager', getRepository]
-        arguments:
-          - PrestaShop\Module\ManitocoreExtendSymfonyForm\Entity\SupplierExtraImage
-
     # Decorators
     # ref. https://devdocs.prestashop.com/1.7/modules/concepts/controllers/admin-controllers/override-decorate-controller/#decorate-the-controller
     prestashop.module.manticore.products.controller:

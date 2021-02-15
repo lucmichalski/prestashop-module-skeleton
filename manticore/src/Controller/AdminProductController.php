@@ -28,12 +28,28 @@ declare(strict_types=1);
 
 namespace PrestaShop\Module\Manticore\Controller;
 
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use PrestaShopBundle\Routing\Converter;
 use PrestaShopBundle\Controller\Admin\FrameworkBundleAdminController;
 use PrestaShopBundle\Controller\Admin\ProductController;
-use PrestaShopBundle\Form\Admin\Product\ProductCategories;
 use PrestaShopBundle\Security\Voter\PageVoter;
+use PrestaShopBundle\Form\Admin\Product\ProductCategories;
+use PrestaShopBundle\Form\Admin\Product\ProductCombination;
+use PrestaShopBundle\Form\Admin\Product\ProductCombinationBulk;
+use PrestaShopBundle\Form\Admin\Product\ProductInformation;
+use PrestaShopBundle\Form\Admin\Product\ProductOptions;
+use PrestaShopBundle\Form\Admin\Product\ProductPrice;
+use PrestaShopBundle\Form\Admin\Product\ProductQuantity;
+use PrestaShopBundle\Form\Admin\Product\ProductSeo;
+use PrestaShopBundle\Form\Admin\Product\ProductShipping;
+// PrestaShop\Module\Manticore\Controller\ProductCategories
+
+use Psr\Log\LoggerInterface;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
+use Symfony\Component\Form\Extension\Core\Type\HiddenType;
+use Symfony\Component\Form\Form;
+use Symfony\Component\Form\FormInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -87,22 +103,9 @@ class AdminProductController extends FrameworkBundleAdminController
         $sortOrder = 'desc'
     )
     {
-        return $this->decoratedController->catalogAction($request, $limit, $offset, $orderBy, $sortOrder);
-    }    
-
-    public function catalogAction2(
-        Request $request,
-        $limit = 10,
-        $offset = 0,
-        $orderBy = 'id_product',
-        $sortOrder = 'desc'
-    )
-    {
         if (!$this->decoratedController->isGranted([PageVoter::READ, PageVoter::UPDATE, PageVoter::CREATE], $this->decoratedController::PRODUCT_OBJECT)) {
             return $this->decoratedController->redirect('admin_dashboard');
         }
-
-        // override with sphinxql
 
         $language = $this->decoratedController->getContext()->language;
         $request->getSession()->set('_locale', $language->locale);
@@ -125,28 +128,48 @@ class AdminProductController extends FrameworkBundleAdminController
         $orderBy = $listParameters['orderBy'];
         $sortOrder = $listParameters['sortOrder'];
 
-        //The product provider performs the same merge internally, so we do the same so that the displayed filters are
-        //consistent with the request ones
+        // The product provider performs the same merge internally, so we do the same so that the displayed filters are
+        // consistent with the request ones
+
+        foreach($persistedFilterParameters as $k => $v) {
+            $persistedFilterParameters[$k] = str_replace(".000000", "", $v);
+        }
+
         $combinedFilterParameters = array_replace($persistedFilterParameters, $request->request->all());
 
         $toolbarButtons = $this->getToolbarButtons();
 
-        // Fetch product list (and cache it into view subcall to listAction)
-        $products = $productProvider->getCatalogProductList(
+        // check manticore results
+        $results = $this->getSphinxResults(
             $offset,
             $limit,
             $orderBy,
             $sortOrder,
             $request->request->all()
         );
-        $lastSql = $productProvider->getLastCompiledSql();
+
+        if ( $results['total'] === 0 ) {
+            // Fetch product list (and cache it into view subcall to listAction)
+            $products = $productProvider->getCatalogProductList(
+                $offset,
+                $limit,
+                $orderBy,
+                $sortOrder,
+                $request->request->all()
+            );
+            $lastSql = $productProvider->getLastCompiledSql();
+        } else {
+            $products = $results['results'];
+            $lastSql = $results['lastSql'];
+        }
 
         $hasCategoryFilter = $productProvider->isCategoryFiltered();
         $hasColumnFilter = $productProvider->isColumnFiltered();
-        $totalFilteredProductCount = (count($products) > 0) ? $products[0]['total'] : 0;
+        $totalFilteredProductCount = (count($products) > 0) ? $results['count'] : 0;
+
         // Alternative layout for empty list
         if ((!$hasCategoryFilter && !$hasColumnFilter && $totalFilteredProductCount === 0)
-            || ($totalProductCount = $productProvider->countAllProducts()) === 0
+            || ($totalProductCount = $results['total']) === 0
         ) {
             // no filter, total filtered == 0, and then total count == 0 too.
             $legacyUrlGenerator = $this->decoratedController->get('prestashop.core.admin.url_generator_legacy');
@@ -188,16 +211,9 @@ class AdminProductController extends FrameworkBundleAdminController
         $categoriesFormView = $categoriesForm->createView();
         $selectedCategory = !empty($combinedFilterParameters['filter_category']) ? new Category($combinedFilterParameters['filter_category']) : null;
 
-        //Drag and drop is ONLY activated when EXPLICITLY requested by the user
-        //Meaning a category is selected and the user clicks on REORDER button
+        // Drag and drop is ONLY activated when EXPLICITLY requested by the user
+        // Meaning a category is selected and the user clicks on REORDER button
         $activateDragAndDrop = 'position_ordering' === $orderBy && $hasCategoryFilter;
-
-        //
-        // $output = $this->decoratedController->indexAction($categoryFilters, $cmsFilters, $request);
-        // $myService = $this->getMyPaymentService();
-        // $output = $this->injectMyData($myService, $output);
-
-        // return $output;
 
         // Template vars injection
         return array_merge(
@@ -255,8 +271,8 @@ class AdminProductController extends FrameworkBundleAdminController
         $sortOrder = 'asc',
         $view = 'full'
     ) {
-        if (!$this->isGranted([PageVoter::READ], self::PRODUCT_OBJECT)) {
-            return $this->redirect('admin_dashboard');
+        if (!$this->decoratedController->isGranted([PageVoter::READ], self::PRODUCT_OBJECT)) {
+            return $this->decoratedController->redirect('admin_dashboard');
         }
 
         /** @var ProductInterfaceProvider $productProvider */
@@ -289,8 +305,31 @@ class AdminProductController extends FrameworkBundleAdminController
              * - actionAdminProductsListingFieldsModifier
              * - actionAdminProductsListingResultsModifier.
              */
-            $products = $productProvider->getCatalogProductList($offset, $limit, $orderBy, $sortOrder);
-            $lastSql = $productProvider->getLastCompiledSql();
+            // check manticore results
+            $results = self::getSphinxResults(
+                $offset,
+                $limit,
+                $orderBy,
+                $sortOrder,
+                $request->request->all()
+            );
+
+            if ( $results['total'] === 0 ) {
+                // Fetch product list (and cache it into view subcall to listAction)
+                $products = $productProvider->getCatalogProductList(
+                    $offset,
+                    $limit,
+                    $orderBy,
+                    $sortOrder,
+                    $request->request->all()
+                );
+                $lastSql = $productProvider->getLastCompiledSql();
+            } else {
+                $products = $results['results'];
+                $lastSql = $results['lastSql'];
+            }
+            // $products = $productProvider->getCatalogProductList($offset, $limit, $orderBy, $sortOrder);
+            // $lastSql = $productProvider->getLastCompiledSql();
         }
 
         $hasCategoryFilter = $productProvider->isCategoryFiltered();
@@ -323,7 +362,7 @@ class AdminProductController extends FrameworkBundleAdminController
             'product_count' => $totalCount,
             'last_sql_query' => $lastSql,
             'has_category_filter' => $productProvider->isCategoryFiltered(),
-            'is_shop_context' => $this->get('prestashop.adapter.shop.context')->isShopContext(),
+            'is_shop_context' => $this->decoratedController->get('prestashop.adapter.shop.context')->isShopContext(),
         ];
         if ($view !== 'full') {
             return $this->decoratedController->render(
@@ -350,19 +389,271 @@ class AdminProductController extends FrameworkBundleAdminController
     public function getToolbarButtons()
     {
         $toolbarButtons = [];
-        // $toolbarButtons['add'] = [
-        //     'href' => $this->generateUrl('admin_product_new'),
-        //     'desc' => $this->trans('New product', 'Admin.Actions'),
-        //     'icon' => 'add_circle_outline',
-        //     'help' => $this->trans('Create a new product: CTRL+P', 'Admin.Catalog.Help'),
-        // ];
+        $toolbarButtons['add'] = [
+            'href' => $this->decoratedController->generateUrl('admin_product_new'),
+            'desc' => $this->decoratedController->trans('New product', 'Admin.Actions'),
+            'icon' => 'add_circle_outline',
+            'help' => $this->decoratedController->trans('Create a new product: CTRL+P', 'Admin.Catalog.Help'),
+        ];
         // $toolbarButtons['add_v2'] = [
-        //     'href' => $this->generateUrl('admin_products_v2_create'),
-        //     'desc' => $this->trans('New product v2', 'Admin.Actions'),
+        //     'href' => $this->decoratedController->generateUrl('admin_products_v2_create'),
+        //     'desc' => $this->decoratedController->trans('New product v2', 'Admin.Actions'),
         //     'icon' => 'add_circle_outline',
         // ];
 
         return $toolbarButtons;
+    }
+
+    /**
+     * Create a new basic product
+     * Then return to form action.
+     *
+     * @return RedirectResponse
+     *
+     * @throws \LogicException
+     * @throws \PrestaShopException
+     */
+    public function newAction()
+    {
+        return $this->decoratedController->newAction();
+    }
+
+    /**
+     * Product form.
+     *
+     * @Template("@PrestaShop/Admin/Product/ProductPage/product.html.twig")
+     *
+     * @param int $id The product ID
+     * @param Request $request
+     *
+     * @return array|Response Template vars
+     *
+     * @throws \LogicException
+     */
+    public function formAction($id, Request $request)
+    {
+        return $this->decoratedController->formAction($id, $request);
+    }
+
+    /**
+     * Do bulk action on a list of Products. Used with the 'selection action' dropdown menu on the Catalog page.
+     *
+     * @param Request $request
+     * @param string $action The action to apply on the selected products
+     *
+     * @throws Exception if action not properly set or unknown
+     *
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function bulkAction(Request $request, $action)
+    {
+        return $this->decoratedController->bulkAction($request, $action);
+    }
+
+    /**
+     * Do mass edit action on the current page of products.
+     * Used with the 'grouped action' dropdown menu on the Catalog page.
+     *
+     * @param Request $request
+     * @param string $action The action to apply on the selected products
+     *
+     * @throws Exception if action not properly set or unknown
+     *
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function massEditAction(Request $request, $action)
+    {
+        return $this->decoratedController->massEditAction($request, $action);
+    }
+
+    /**
+     * Do action on one product at a time. Can be used at many places in the controller's page.
+     *
+     * @param string $action The action to apply on the selected product
+     * @param int $id the product ID to apply the action on
+     *
+     * @throws Exception if action not properly set or unknown
+     *
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function unitAction($action, $id) {
+        return $this->decoratedController->unitAction($action, $id);        
+    }
+
+    /**
+     * Toggle product status
+     *
+     * @AdminSecurity(
+     *     "is_granted(['update'], request.get('_legacy_controller'))",
+     *     message="You do not have permission to update this."
+     * )
+     *
+     * @param int $productId
+     *
+     * @return JsonResponse
+     */
+    public function toggleStatusAction($productId)
+    {
+        return $this->decoratedController->toggleStatusAction($productId);
+    }
+
+    /**
+     * @return CsvResponse
+     *
+     * @throws \Symfony\Component\Translation\Exception\InvalidArgumentException
+     */
+    public function exportAction()
+    {
+        return $this->decoratedController->exportAction();
+    }
+
+    /**
+     * Set the Catalog filters values and redirect to the catalogAction.
+     *
+     * URL example: /product/catalog_filters/42/last/32
+     *
+     * @param int|string $quantity the quantity to set on the catalog filters persistence
+     * @param string $active the activation state to set on the catalog filters persistence
+     *
+     * @return RedirectResponse
+     */
+    public function catalogFiltersAction($quantity = 'none', $active = 'none')
+    {
+        return $this->decoratedController->catalogFiltersAction($quantity, $active);
+    }
+
+    /**
+     * Builds the product form.
+     *
+     * @param Product $product
+     * @param AdminModelAdapter $modelMapper
+     *
+     * @return FormInterface
+     *
+     * @throws \Symfony\Component\Process\Exception\LogicException
+     */
+    private function createProductForm(Product $product, AdminModelAdapter $modelMapper)
+    {
+        return $this->decoratedController->createProductForm($product, $modelMapper);
+    }
+
+    /**
+     * @deprecated since 1.7.5.0, to be removed in 1.8 rely on CommonController::renderFieldAction
+     *
+     * @throws \OutOfBoundsException
+     * @throws \LogicException
+     * @throws \PrestaShopException
+     */
+    public function renderFieldAction($productId, $step, $fieldName)
+    {
+        return $this->decoratedController->renderFieldAction($productId, $step, $fieldName);
+    }
+
+    public static function getSphinxResults($offset, $limit, $orderBy, $sortOrder, $request)
+    {
+
+        $results = $resultsFull = array();
+        $count = array();
+
+        /* You should enable error reporting for mysqli before attempting to make a connection */
+        mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+        // connect to Sphinx database
+        $link = mysqli_connect('manticore', 'root', '', 'rt_products', 9306);
+
+        if ($link) {
+            $where = '';
+            if (count($request) > 0) {
+                $where .= 'WHERE 1=1 ';
+                // print_r($request);
+            }
+            $matchFields = array();
+            $attrFields  = array();
+            foreach ($request as $filter => $value) {
+                if ($filter === "filter_column_name" && $value !== "") {
+                    $matchFields["name"] = $value;
+                }
+                if ($filter === "filter_column_reference" && $value !== "") {
+                    $matchFields["reference"] = $value;
+                }
+                if ($filter === "filter_column_name_category" && $value !== "") {
+                    $matchFields["name_category"] = $value;
+                }
+                if ($filter === "filter_column_id_product" && $value !== "") {
+                    $attrFields["id_product"] = $value;
+                }
+                if ($filter === "filter_column_sav_quantity" && $value !== "") {
+                    $attrFields["sav_quantity"] = $value;
+                }
+                if ($filter === "filter_column_active" && $value !== "") {
+                    $attrFields["active"] = $value;
+                }
+            }
+
+            if (count($matchFields) > 0) {
+                $where .= 'AND MATCH(\'@(';
+                $attrs = array();
+                $patterns = array();
+                foreach ($matchFields as $column => $pattern) {
+                    $attrs[] = $column;
+                    $patterns[] = $pattern;
+                }
+                $where .= implode(",", $attrs).') ';
+                $where .= implode(" && ", $patterns).'\')';
+            }            
+
+            if (count($attrFields) > 0) {
+                $where .= ' ';
+                foreach($attrFields as $x => $val) {
+                    $where .= " AND ";
+                    $where .= " $x ";
+                    if ($x == "id_product") {
+                        $where .= str_replace(".000000", "", " $val ");
+                    } else {
+                        $where .= " = '"+$val+"' ";
+                    }
+                }
+            }    
+
+            $queryTotal = 'SELECT count(*) as total FROM `rt_products`';
+            if ($result = $link->query($queryTotal)) {
+                $query_results = $result->fetch_array();
+                $count["total"] = $query_results['total'];
+                $result->close();
+            }
+
+            $queryStats = 'SELECT count(*) as count'
+                . ' FROM `rt_products`'
+                . $where;
+
+            // echo "queryStats: $queryStats";
+
+            if ($result = $link->query($queryStats)) {
+                $query_results = $result->fetch_array();
+                $count["count"] = $query_results['count'];
+                $result->close();
+            }
+
+            $query = 'SELECT id_product, reference, price, id_shop_default, is_virtual, name, link_rewrite, active, shop_name, id_image as image, name_category, price_final, nb_downloadable, sav_quantity, badge_danger '
+                . ' FROM `rt_products`'
+                . $where
+                . ' ORDER BY `'.$orderBy.'` '.$sortOrder
+                . ' LIMIT '.$offset.', '.$limit;
+
+
+            if ($result = $link->query($query)) {
+                while ($query_results = $result->fetch_array()) {
+                    $results[] = $query_results;
+                }
+                $result->close();
+            }
+
+            mysqli_close($link);
+        }
+
+        $res = array('lastSql' => $query, 'total' => (int)$count['total'], 'count' => (int)$count['count'], 'results' => $results);
+
+        return $res;
     }
 
 }
